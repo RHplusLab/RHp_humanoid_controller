@@ -1,1 +1,13 @@
+<package format="3">
+  <name>rhphumanoid_manual_controller</name>
+  <version>0.0.0</version>
+  <description>Manual controller for humanoid walking patterns</description>
+  <maintainer email="your_email@example.com">서현</maintainer>
+  <license>Apache-2.0</license>
 
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend> <depend>trajectory_msgs</depend> <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
