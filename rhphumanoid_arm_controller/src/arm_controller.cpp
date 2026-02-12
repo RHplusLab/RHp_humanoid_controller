@@ -34,19 +34,19 @@ public:
 
   // --- API Functions ---
   
-  void wave_left(int times) {
-    RCLCPP_INFO(this->get_logger(), "Command: Left Wave %d times", times);
-    for(int i=0; i<times; i++) execute_sequence(rhp_arm_motions::SEQ_WAVE_LEFT);
+  void raise_arm() {
+    RCLCPP_INFO(this->get_logger(), "Command: Raise Arm");
+    execute_sequence(rhp_arm_motions::SEQ_RAISE_ARM);
   }
 
-  void wave_right(int times) {
-    RCLCPP_INFO(this->get_logger(), "Command: Right Wave %d times", times);
-    for(int i=0; i<times; i++) execute_sequence(rhp_arm_motions::SEQ_WAVE_RIGHT);
+  void wave_arm(int times) {
+    RCLCPP_INFO(this->get_logger(), "Command: Wave Arm %d times", times);
+    for(int i=0; i<times; i++) execute_sequence(rhp_arm_motions::SEQ_WAVE_ARM);
   }
 
-  void do_hooray() {
-    RCLCPP_INFO(this->get_logger(), "Command: Hooray!");
-    execute_sequence(rhp_arm_motions::SEQ_HOORAY);
+  void lower_arm() {
+    RCLCPP_INFO(this->get_logger(), "Command: Lower Arm");
+    execute_sequence(rhp_arm_motions::SEQ_LOWER_ARM);
   }
 
 private:
@@ -89,9 +89,9 @@ int main(int argc, char ** argv)
     std::this_thread::sleep_for(2s);
 
     // [시나리오 실행]
-    node->wave_left(2);   // 왼팔 2번
-    node->wave_right(2);  // 오른팔 2번
-    node->do_hooray();    // 만세
+    node->raise_arm();  // 오른팔 들기
+    node->wave_arm(2);  // 오른팔 흔들기
+    node->lower_arm();  // 오른팔 내리기
 
   });
 

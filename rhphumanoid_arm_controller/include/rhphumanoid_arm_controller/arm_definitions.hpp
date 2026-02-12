@@ -19,48 +19,40 @@ namespace rhp_arm_motions {
 
     // 1. 차렷 (초기 상태)
     const std::vector<double> POSE_INIT = {
-        0.0, 0.0, 0.0, 0.0, 0.0,  // Left
-        0.0, 0.0, 0.0, 0.0, 0.0   // Right
+        0.15, -1.45, 0.00, -0.50, 0.00,  // Left
+        -0.15, 1.45, 0.00, 0.50, 0.00    // Right
     };
 
-    // 2. 왼팔 들기 (앞으로)
-    const std::vector<double> POSE_LEFT_UP = {
-        -1.0, 0.0, 0.0, 0.0, 0.0,  // Left (Pitch -1.0)
-         0.0, 0.0, 0.0, 0.0, 0.0   // Right
+    // 2. 오른팔 안쪽으로 들기
+    const std::vector<double> POSE_WAVE_IN = {
+        0.15, -1.50, 0.00, -0.50, 0.00,
+        -0.15, -1.50, 1.50, 1.00, 0.10
     };
 
-    // 3. 오른팔 들기 (앞으로)
-    const std::vector<double> POSE_RIGHT_UP = {
-         0.0, 0.0, 0.0, 0.0, 0.0,
-        -1.0, 0.0, 0.0, 0.0, 0.0   // Right (Pitch -1.0)
-    };
-
-    // 4. 만세 (Both Up)
-    const std::vector<double> POSE_HOORAY = {
-        -1.5, 0.0, 0.0, 0.0, 0.0,
-        -1.5, 0.0, 0.0, 0.0, 0.0
+    // 3. 오른팔 바깥쪽으로 들기
+    const std::vector<double> POSE_WAVE_OUT = {
+        0.15, -1.40, 0.00, -0.50, 0.00,
+        -0.15, -0.60, 1.50, 0.00, -0.10
     };
 
     // -------------------------------------------------------------------------
     // [동작 시퀀스]
     // -------------------------------------------------------------------------
     
-    // 왼팔 흔들기
-    const std::vector<MotionStep> SEQ_WAVE_LEFT = {
-        { POSE_LEFT_UP, 0.8, 0.2 }, // 들기
-        { POSE_INIT,    0.8, 0.2 }  // 내리기
+    // 오른팔 들기
+    const std::vector<MotionStep> SEQ_RAISE_ARM = {
+        { POSE_WAVE_IN, 1.2, 0.8 }
     };
 
     // 오른팔 흔들기
-    const std::vector<MotionStep> SEQ_WAVE_RIGHT = {
-        { POSE_RIGHT_UP, 0.8, 0.2 },
-        { POSE_INIT,     0.8, 0.2 }
+    const std::vector<MotionStep> SEQ_WAVE_ARM = {
+        { POSE_WAVE_OUT, 0.4, 0.6 },
+        { POSE_WAVE_IN,  0.4, 0.6 }
     };
 
-    // 만세 삼창 (만세 -> 차렷)
-    const std::vector<MotionStep> SEQ_HOORAY = {
-        { POSE_HOORAY, 1.0, 0.5 },
-        { POSE_INIT,   1.0, 0.5 }
+    // 오른팔 내리기
+    const std::vector<MotionStep> SEQ_LOWER_ARM = {
+        { POSE_INIT, 1.2, 0.8 }
     };
 
 } // namespace rhp_arm_motions
