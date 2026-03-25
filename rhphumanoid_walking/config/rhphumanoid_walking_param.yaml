@@ -1,0 +1,25 @@
+# RHp Humanoid Walking Parameters
+# Length unit: m,  Angle unit: deg (converted to rad on load)
+
+# --- Initial foot position offset ---
+x_offset: -0.010       # forward/back body offset (m)
+y_offset:  0.005       # lateral body offset (m)
+z_offset:  0.010       # vertical body offset (m)
+roll_offset:  0.0      # (deg)
+pitch_offset: 0.0      # (deg)
+yaw_offset:   0.0      # (deg)
+hip_pitch_offset: 10.0 # slight forward lean (deg)
+
+# --- Timing ---
+period_time: 600        # one full gait cycle (ms)
+dsp_ratio:   0.2        # double support phase ratio
+step_forward_back_ratio: 0.28
+
+# --- Step amplitude ---
+x_move_amplitude: 0.020   # forward step length (m), tune in Gazebo
+
+# --- Swing ---
+foot_height:      0.020   # foot lift height (m)
+swing_right_left: 0.018   # lateral body sway (m)
+swing_top_down:   0.005   # vertical body oscillation (m)
+pelvis_offset:    3.0     # pelvis tilt during SSP (deg)
