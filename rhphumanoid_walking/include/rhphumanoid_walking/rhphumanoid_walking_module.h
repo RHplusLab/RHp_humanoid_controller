@@ -13,6 +13,7 @@
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
+#include <trajectory_msgs/msg/joint_trajectory_point.hpp>
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
 #include "rhphumanoid_walking_parameter.h"
@@ -42,9 +43,6 @@ private:
   // ROS2 callbacks
   void walkingCommandCallback(const std_msgs::msg::String::SharedPtr msg);
 
-  // Control loop (timer)
-  void controlLoop();
-
   // Walking logic
   void   processPhase(double time_unit);
   bool   computeLegAngle(double *leg_angle);
@@ -55,6 +53,7 @@ private:
   void   startWalking();
   void   stop();
   void   loadWalkingParam(const std::string &path);
+  void   startGaitCycle();
 
   // Kinematics
   RHpKinematicsDynamics *kd_;
@@ -63,7 +62,7 @@ private:
   using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
   rclcpp_action::Client<FollowJointTrajectory>::SharedPtr action_client_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr command_sub_;
-  rclcpp::TimerBase::SharedPtr control_timer_;
+  rclcpp::TimerBase::SharedPtr start_timer_;
 
   void sendTrajectory(const std::vector<double> &positions, double move_time);
 
@@ -76,6 +75,7 @@ private:
   WalkingState walking_state_;
   bool ctrl_running_;
   bool real_running_;
+  bool is_starting_;
   double time_;
   int phase_;
 

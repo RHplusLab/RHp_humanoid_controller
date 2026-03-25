@@ -17,6 +17,9 @@ def generate_launch_description():
             executable='rhphumanoid_walking_node',
             name='rhphumanoid_walking',
             output='screen',
-            parameters=[{'walking_param_path': param_path}],
+            parameters=[
+                {'walking_param_path': param_path},
+                {'use_sim_time': True},
+            ],
         )
     ])

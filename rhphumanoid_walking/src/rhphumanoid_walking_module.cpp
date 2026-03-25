@@ -16,6 +16,7 @@ WalkingModule::WalkingModule(const rclcpp::NodeOptions &options)
   walking_state_(WalkingReady),
   ctrl_running_(false),
   real_running_(false),
+  is_starting_(false),
   time_(0.0),
   phase_(PHASE0),
   previous_x_move_amplitude_(0.0),
@@ -86,7 +87,7 @@ WalkingModule::WalkingModule(const rclcpp::NodeOptions &options)
   updateTimeParam();
   updateMovementParam();
 
-  // Action client (same as rhphumanoid_walking_pattern)
+  // Action client
   action_client_ = rclcpp_action::create_client<FollowJointTrajectory>(
     this, "/leg_controller/follow_joint_trajectory");
 
@@ -94,11 +95,6 @@ WalkingModule::WalkingModule(const rclcpp::NodeOptions &options)
   command_sub_ = this->create_subscription<std_msgs::msg::String>(
     "/walking/command", 10,
     std::bind(&WalkingModule::walkingCommandCallback, this, std::placeholders::_1));
-
-  // Control timer (50 Hz)
-  control_timer_ = this->create_wall_timer(
-    std::chrono::milliseconds(control_cycle_ms_),
-    std::bind(&WalkingModule::controlLoop, this));
 
   RCLCPP_INFO(this->get_logger(), "WalkingModule initialized (kinematic-only, no IMU).");
 }
@@ -122,40 +118,57 @@ void WalkingModule::walkingCommandCallback(const std_msgs::msg::String::SharedPt
 }
 
 // ---------------------------------------------------------------------------
-// Control loop (50 Hz)
+// startGaitCycle — 한 보행 사이클(30포인트)을 계산해 action으로 전송
 // ---------------------------------------------------------------------------
-void WalkingModule::controlLoop()
+void WalkingModule::startGaitCycle()
 {
-  if (walking_state_ == WalkingDisable)
-    return;
+  if (!real_running_) return;
 
-  const double time_unit = control_cycle_ms_ * 0.001;
-  double angle[JOINT_NUM] = {};
-
-  processPhase(time_unit);
-
-  bool ok = computeLegAngle(angle);
-
-  if (!ok)
-  {
-    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "IK failed");
+  if (!action_client_->action_server_is_ready()) {
+    RCLCPP_ERROR(this->get_logger(), "Action server not ready!");
+    real_running_ = false;
     return;
   }
 
-  std::vector<double> positions(angle, angle + JOINT_NUM);
-  // time_from_start: 2 control cycles 여유를 줘서 컨트롤러가 부드럽게 보간
-  sendTrajectory(positions, control_cycle_ms_ * 0.001 * 2.0);
+  const double time_unit = control_cycle_ms_ * 0.001;
+  const int n_points = static_cast<int>(std::round(period_time_ / time_unit));
 
-  // Advance time
-  if (real_running_)
-  {
+  auto goal_msg = FollowJointTrajectory::Goal();
+  goal_msg.trajectory.joint_names = joint_names_;
+
+  for (int i = 0; i < n_points; i++) {
+    processPhase(time_unit);
+
+    double angle[JOINT_NUM] = {};
+    if (!computeLegAngle(angle)) {
+      RCLCPP_WARN(this->get_logger(), "IK failed at step %d/%d", i, n_points);
+    }
+
+    trajectory_msgs::msg::JointTrajectoryPoint pt;
+    pt.positions = std::vector<double>(angle, angle + JOINT_NUM);
+    pt.time_from_start = rclcpp::Duration::from_seconds((i + 1) * time_unit);
+    goal_msg.trajectory.points.push_back(pt);
+
     time_ += time_unit;
-    if (time_ >= period_time_)
-    {
+    if (time_ >= period_time_) {
       time_ = 0.0;
       previous_x_move_amplitude_ = walking_param_.x_move_amplitude * 0.5;
     }
   }
+
+  auto send_goal_options = rclcpp_action::Client<FollowJointTrajectory>::SendGoalOptions();
+  send_goal_options.result_callback =
+    [this](const rclcpp_action::ClientGoalHandle<FollowJointTrajectory>::WrappedResult &) {
+      if (ctrl_running_) {
+        startGaitCycle();
+      } else {
+        real_running_ = false;
+        RCLCPP_INFO(this->get_logger(), "Walking stopped.");
+      }
+    };
+
+  action_client_->async_send_goal(goal_msg, send_goal_options);
+  RCLCPP_INFO(this->get_logger(), "Gait cycle sent (%d points, %.1fms).", n_points, period_time_ * 1000.0);
 }
 
 // ---------------------------------------------------------------------------
@@ -255,18 +268,32 @@ void WalkingModule::updatePoseParam()
 // ---------------------------------------------------------------------------
 void WalkingModule::startWalking()
 {
-  // 1. 먼저 차렷 자세로 천천히 이동 (기존 작동 코드와 동일한 방식)
+  if (is_starting_ || real_running_)
+  {
+    RCLCPP_WARN(this->get_logger(), "Already starting or walking. Ignoring command.");
+    return;
+  }
+
+  is_starting_ = true;
+
+  // 1. 차렷 자세로 이동 (2초)
   RCLCPP_INFO(this->get_logger(), "Moving to stand pose (2s)...");
   std::vector<double> stand_pose(JOINT_NUM, 0.0);
   sendTrajectory(stand_pose, 2.0);
-  std::this_thread::sleep_for(std::chrono::milliseconds(2200));
 
-  // 2. 보행 시작
-  ctrl_running_ = true;
-  real_running_ = true;
-  time_         = 0.0;
-  walking_state_ = WalkingEnable;
-  RCLCPP_INFO(this->get_logger(), "Walking started.");
+  // 2. 2.2초 뒤 첫 사이클 시작
+  start_timer_ = this->create_wall_timer(
+    std::chrono::milliseconds(2200),
+    [this]() {
+      start_timer_->cancel();
+      updateMovementParam();
+      ctrl_running_  = true;
+      real_running_  = true;
+      time_          = 0.0;
+      is_starting_   = false;
+      RCLCPP_INFO(this->get_logger(), "Walking started.");
+      startGaitCycle();
+    });
 }
 
 void WalkingModule::stop()
@@ -500,10 +527,9 @@ void WalkingModule::loadWalkingParam(const std::string &path)
 // ---------------------------------------------------------------------------
 void WalkingModule::sendTrajectory(const std::vector<double> &positions, double move_time)
 {
-  if (!action_client_->wait_for_action_server(std::chrono::seconds(1)))
+  if (!action_client_->wait_for_action_server(std::chrono::seconds(10)))
   {
-    RCLCPP_ERROR_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
-                          "Action server not available!");
+    RCLCPP_ERROR(this->get_logger(), "Action server not available after 10s! Skipping stand pose.");
     return;
   }
 
