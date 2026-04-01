@@ -2,13 +2,13 @@
 # Length unit: m,  Angle unit: deg (converted to rad on load)
 
 # --- Initial foot position offset ---
-x_offset: -0.010       # forward/back body offset (m)
+x_offset: -0.015       # forward/back body offset (m)
 y_offset:  0.005       # lateral body offset (m)
 z_offset:  0.010       # vertical body offset (m)
 roll_offset:  0.0      # (deg)
 pitch_offset: 0.0      # (deg)
 yaw_offset:   0.0      # (deg)
-hip_pitch_offset: 10.0 # slight forward lean (deg)
+hip_pitch_offset: 5.0  # slight forward lean (deg)
 
 # --- Timing ---
 period_time: 600        # one full gait cycle (ms)
