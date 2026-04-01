@@ -2,21 +2,21 @@
 # Length unit: m,  Angle unit: deg (converted to rad on load)
 
 # --- Initial foot position offset ---
-x_offset: -0.015       # forward/back body offset (m)
-y_offset:  0.005       # lateral body offset (m)
+x_offset: -0.018       # forward/back body offset (m)
+y_offset:  0.000       # lateral body offset (m)
 z_offset:  0.010       # vertical body offset (m)
 roll_offset:  0.0      # (deg)
 pitch_offset: 0.0      # (deg)
 yaw_offset:   0.0      # (deg)
-hip_pitch_offset: 5.0  # slight forward lean (deg)
+hip_pitch_offset: 1.0  # slight forward lean (deg)
 
 # --- Timing ---
-period_time: 600        # one full gait cycle (ms)
-dsp_ratio:   0.2        # double support phase ratio
+period_time: 800        # one full gait cycle (ms)
+dsp_ratio:   0.3        # double support phase ratio
 step_forward_back_ratio: 0.28
 
 # --- Step amplitude ---
-x_move_amplitude: 0.020   # forward step length (m), tune in Gazebo
+x_move_amplitude: 0.000   # forward step length (m), tune in Gazebo
 
 # --- Swing ---
 foot_height:      0.020   # foot lift height (m)
