@@ -16,7 +16,7 @@ dsp_ratio:   0.3        # double support phase ratio
 step_forward_back_ratio: 0.28
 
 # --- Step amplitude ---
-x_move_amplitude: 0.000   # forward step length (m), tune in Gazebo
+x_move_amplitude: 0.020   # forward step length (m), tune in Gazebo
 
 # --- Swing ---
 foot_height:      0.020   # foot lift height (m)
