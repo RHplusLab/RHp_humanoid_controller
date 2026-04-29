@@ -308,13 +308,39 @@ ros2 topic pub --once /walking/command std_msgs/msg/String "data: 'stop'"
 
 ## 파라미터 튜닝 방법
 
-1. `config/rhphumanoid_walking_param.yaml` 에서 값 수정
-2. 보행 노드 재시작
+> **주의**: `colcon build` 시 `src/config/` 파일이 `install/` 디렉토리로 **복사**됩니다.
+> 노드는 `install/` 쪽 파일을 읽으므로, `src/` 만 수정해서는 반영되지 않습니다.
+
+### 방법 1: install/ 파일 직접 수정 (빠른 튜닝용)
 
 ```bash
-# Ctrl+C 로 노드 종료 후
+# 아래 파일을 직접 수정 후 노드 재시작
+install/rhphumanoid_walking/share/rhphumanoid_walking/config/rhphumanoid_walking_param.yaml
+```
+
+튜닝이 끝나면 최종값을 `src/config/rhphumanoid_walking_param.yaml` 에도 동일하게 반영해두어야 합니다.
+(다음 `colcon build` 시 `src/` 가 `install/` 을 덮어씁니다.)
+
+### 방법 2: src/ 수정 후 빌드 (정석)
+
+```bash
+# 1. src/config/rhphumanoid_walking_param.yaml 수정
+# 2. 빌드
+colcon build --packages-select rhphumanoid_walking
+# 3. 노드 재시작
 ros2 launch rhphumanoid_walking walking.launch.py
 ```
+
+### 방법 3: symlink-install 사용 (한 번만 설정)
+
+```bash
+colcon build --symlink-install --packages-select rhphumanoid_walking
+```
+
+한 번만 이 옵션으로 빌드하면 `install/` 파일이 `src/` 파일의 심링크가 됩니다.
+이후에는 `src/` 수정 → 노드 재시작만으로 즉시 반영됩니다.
+
+---
 
 한 번에 하나의 파라미터만 수정하고 테스트하는 것을 권장합니다.
 
